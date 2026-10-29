@@ -5,8 +5,11 @@ import { ImageSourcePicker } from '@/components/image-source-picker';
 import { AppText, Button, Header, Pill, Screen, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import type { PreparedImage } from '@/lib/images';
+import { AiError, scanGarment, type GarmentScan } from '@/services/ai-service';
+import { track } from '@/services/analytics';
 import type { Garment, GarmentCategory, GarmentInput, Season } from '@/types/garment';
 
+import { AiScanCard, type ScanState } from './ai-scan-card';
 import {
   Categories,
   GarmentColors,
@@ -48,6 +51,45 @@ export function GarmentForm({
   const [seasons, setSeasons] = useState<Season[]>(initial?.seasons ?? []);
   const [errors, setErrors] = useState<Errors>({});
   const [saving, setSaving] = useState(false);
+  const [scan, setScan] = useState<ScanState>({ status: 'idle' });
+  const [aiMetadata, setAiMetadata] = useState<Record<string, unknown> | null>(
+    initial?.ai_metadata ?? null,
+  );
+
+  function handleImagePicked(picked: PreparedImage) {
+    setImage(picked);
+    setErrors((e) => ({ ...e, image: undefined }));
+    runScan(picked);
+  }
+
+  /** Escaneo IA (RF6): rellena solo los campos que siguen vacíos. */
+  async function runScan(picked: PreparedImage) {
+    setScan({ status: 'scanning' });
+    try {
+      const result = await scanGarment(picked);
+      applyScan(result);
+      setAiMetadata({ ...result, scanned_at: new Date().toISOString() });
+      setScan({ status: 'done', result });
+      track('garment_scan_applied', { category: result.category });
+    } catch (error) {
+      setScan({
+        status: 'error',
+        message: error instanceof AiError ? error.message : 'No hemos podido analizar la foto.',
+      });
+    }
+  }
+
+  function applyScan(result: GarmentScan) {
+    const color = GarmentColors.find((c) => c.name === result.color_name);
+    setName((v) => (v.trim() ? v : result.name));
+    setSubcategory((v) => (v.trim() ? v : capitalize(result.subcategory)));
+    setCategory((v) => v ?? result.category);
+    setColorHex((v) => v ?? color?.hex ?? null);
+    setStyles((v) => (v.length ? v : result.styles));
+    setOccasions((v) => (v.length ? v : result.occasions));
+    setSeasons((v) => (v.length ? v : result.seasons));
+    setErrors((e) => ({ ...e, name: undefined, category: undefined }));
+  }
 
   async function handleSubmit() {
     const next: Errors = {};
@@ -70,6 +112,7 @@ export function GarmentForm({
           styles: styles_,
           occasions,
           seasons,
+          ai_metadata: aiMetadata,
         },
         image,
       );
@@ -96,10 +139,7 @@ export function GarmentForm({
       <View style={styles.field}>
         <ImageSourcePicker
           value={image}
-          onChange={(picked) => {
-            setImage(picked);
-            setErrors((e) => ({ ...e, image: undefined }));
-          }}
+          onChange={handleImagePicked}
           currentUrl={imageUrl}
           aspect={[3, 4]}
           placeholder="Haz una foto de la prenda sobre un fondo liso"
@@ -110,6 +150,8 @@ export function GarmentForm({
           </AppText>
         )}
       </View>
+
+      <AiScanCard state={scan} onRetry={image ? () => runScan(image) : undefined} />
 
       <TextField
         label="Nombre"
@@ -200,6 +242,10 @@ function Section({ title, error, children }: { title: string; error?: string; ch
       )}
     </View>
   );
+}
+
+function capitalize(text: string) {
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
 }
 
 function toggle<T>(list: T[], value: T): T[] {

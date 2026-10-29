@@ -67,8 +67,8 @@ export default function ProfileScreen() {
         <MenuRow
           icon="palette"
           label="Mi paleta de color"
-          hint="Sube un selfie para tu análisis"
-          onPress={() => router.push('/profile/selfie')}
+          hint="Tu estación de color y colores recomendados"
+          onPress={() => router.push('/profile/palette')}
         />
       </Card>
 

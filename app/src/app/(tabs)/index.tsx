@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText, Button, Card, Icon, Screen, type IconName } from '@/components/ui';
 import { MaxWideContentWidth, Spacing } from '@/constants/theme';
+import { useColorProfile } from '@/features/colorimetry/use-color-profile';
 import { optionLabel } from '@/features/onboarding/questions';
 import { GarmentCard } from '@/features/wardrobe/garment-card';
 import { useGarments } from '@/features/wardrobe/use-garments';
@@ -25,6 +26,7 @@ export default function DashboardScreen() {
   const { profile } = useAuth();
   const theme = useTheme();
   const { garments } = useGarments();
+  const { profile: colorProfile } = useColorProfile();
   const recent = (garments ?? []).slice(0, 6);
   const imageUrls = useSignedUrls('garments', recent.map((g) => g.image_path));
 
@@ -57,9 +59,11 @@ export default function DashboardScreen() {
     },
     {
       title: 'Perfil de color',
-      description: 'Descubre tu paleta con un selfie.',
+      description: colorProfile?.analyzed_at
+        ? `${colorProfile.season} · ver tu paleta personal.`
+        : 'Descubre tu paleta con un selfie.',
       icon: 'palette',
-      href: '/profile/selfie',
+      href: '/profile/palette',
     },
   ];
 

@@ -9,6 +9,9 @@ export type ColorProfile = {
   palette: ColorSwatch[];
   recommended_colors: ColorSwatch[];
   avoid_colors: ColorSwatch[];
+  summary: string | null;
+  tips: string[];
+  best_metals: string[];
   selfie_path: string | null;
   analyzed_at: string | null;
   created_at: string;

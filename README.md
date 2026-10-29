@@ -38,6 +38,27 @@ npm run ios        # simulador (macOS) o Expo Go
 
 Para reiniciar la base de datos con el esquema y los datos de prueba: `npx supabase db reset`.
 
+### IA (escaneo de prendas y colorimetría)
+
+Las funciones de IA viven en `supabase/functions/` y llaman a Claude (`claude-opus-5-5`) con visión y respuestas estructuradas. La clave de Anthropic **solo** está en el servidor, nunca en la app.
+
+```bash
+# 1. Crea una clave en https://console.anthropic.com y guárdala en el archivo de secretos local
+cp supabase/functions/.env.example supabase/functions/.env   # y pega ANTHROPIC_API_KEY
+
+# 2. Sirve las funciones en local (con Supabase ya arrancado)
+npx supabase functions serve --env-file supabase/functions/.env
+```
+
+Sin clave, la app sigue funcionando: avisa de que la IA no está configurada y permite rellenar las prendas a mano.
+
+| Función | Qué hace | Límite por usuario |
+|---|---|---|
+| `scan-garment` | Detecta tipo, color, estilo, ocasión y temporada de una prenda (RF6) | 30 / hora |
+| `analyze-colors` | Estación de color, paleta, colores recomendados y a evitar a partir del selfie (RF7) | 5 / hora |
+
+Cada llamada queda registrada en `analytics_events` (`ai_garment_scan`, `ai_color_analysis`) con los tokens usados y el tiempo de respuesta, para controlar coste y rendimiento. Como referencia, cada análisis ronda los 2–4 mil tokens de entrada y unos cientos de salida.
+
 ## Arquitectura
 
 | Capa | Tecnología | Notas |
@@ -47,7 +68,7 @@ Para reiniciar la base de datos con el esquema y los datos de prueba: `npx supab
 | Auth | Supabase Auth | Sesión cifrada en el móvil (SecureStore + AES) |
 | Datos | Postgres con Row Level Security | Cada usuario solo accede a sus datos (RB7, RB8) |
 | Imágenes | Supabase Storage, buckets privados `selfies` y `garments` | Carpeta por usuario |
-| IA (fase 3) | Claude con visión, desde Supabase Edge Functions | La clave nunca va en la app |
+| IA | Claude (`claude-opus-5-5`) con visión y structured outputs, desde Supabase Edge Functions | La clave nunca va en la app; fallback automático ante rechazos |
 | Analytics | Tabla `analytics_events` + `services/analytics.ts` | RF13 |
 
 ### Estructura de `app/src`
@@ -74,7 +95,7 @@ Las rutas protegidas del layout raíz deciden qué ve el usuario: sin sesión �
 - [x] **Fase 0** · Sistema de diseño luxury y estructura modular
 - [x] **Fase 1** · Registro, login, logout y recuperación de contraseña (RF1) · perfil editable (RF2) · quiz de onboarding (RF3) · esquema completo con RLS
 - [x] **Fase 2** · Subida de imágenes con vista previa y compresión (RF4) · armario digital: añadir, editar, eliminar, categorizar y filtrar prendas (RF5) · selfie para colorimetría · dashboard con datos reales
-- [ ] **Fase 3** · Escaneo IA de prendas y colorimetría (RF6, RF7)
+- [x] **Fase 3** · Escaneo IA de prendas que rellena el formulario (RF6) · análisis de colorimetría con paleta, colores estrella y a evitar (RF7)
 - [ ] **Fase 4** · Generación y guardado de outfits (RF8, RF10, RB1–RB11)
 - [ ] **Fase 5** · Ecommerce, Restyle y dashboard completo (RF9, RF11, RF14)
 - [ ] **Fase 6** · Analytics, accesibilidad, tests y publicación
@@ -82,6 +103,7 @@ Las rutas protegidas del layout raíz deciden qué ve el usuario: sin sesión �
 ## Pasar a producción
 
 1. Crea un proyecto en [supabase.com](https://supabase.com) y aplica las migraciones: `npx supabase link` y luego `npx supabase db push`.
+1. Sube la clave de IA y despliega las funciones: `npx supabase secrets set ANTHROPIC_API_KEY=...` y `npx supabase functions deploy`.
 2. En **Authentication → URL Configuration**, añade las URLs de redirección: la de tu web, `luxematch://**` y `exp://**`.
 3. Pon la URL y la publishable key del proyecto en las variables de entorno de EAS o Vercel.
 4. Móvil: `npx eas-cli@latest build` (las cuentas de Apple Developer y Google Play son necesarias para publicar en las tiendas).

@@ -10,3 +10,6 @@ supabase/.env
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Secretos de las Edge Functions
+supabase/functions/.env

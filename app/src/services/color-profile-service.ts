@@ -36,6 +36,9 @@ export async function saveSelfie(
       palette: [],
       recommended_colors: [],
       avoid_colors: [],
+      summary: null,
+      tips: [],
+      best_metals: [],
       analyzed_at: null,
     })
     .select('*')

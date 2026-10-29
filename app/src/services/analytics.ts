@@ -7,6 +7,7 @@ export type AnalyticsEvent =
   | 'onboarding_completed'
   | 'style_preferences_updated'
   | 'garment_uploaded'
+  | 'garment_scan_applied'
   | 'outfit_generated'
   | 'outfit_saved'
   | 'ecommerce_click';

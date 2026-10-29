@@ -37,4 +37,5 @@ export type GarmentInput = Pick<
   | 'styles'
   | 'occasions'
   | 'seasons'
+  | 'ai_metadata'
 >;

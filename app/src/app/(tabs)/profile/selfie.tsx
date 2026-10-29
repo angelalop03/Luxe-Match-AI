@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
@@ -9,6 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { confirm, notify } from '@/lib/confirm';
 import type { PreparedImage } from '@/lib/images';
 import { useAuth } from '@/providers/auth-provider';
+import { AiError, analyzeColors } from '@/services/ai-service';
 import { deleteSelfie, fetchColorProfile, saveSelfie } from '@/services/color-profile-service';
 import type { ColorProfile } from '@/types/color-profile';
 
@@ -26,6 +28,8 @@ export default function SelfieScreen() {
   const [profile, setProfile] = useState<ColorProfile | null | undefined>(undefined);
   const [image, setImage] = useState<PreparedImage | null>(null);
   const [saving, setSaving] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const urls = useSignedUrls('selfies', [profile?.selfie_path]);
   const currentUrl = profile?.selfie_path ? urls[profile.selfie_path] : undefined;
 
@@ -54,6 +58,21 @@ export default function SelfieScreen() {
       notify('No se ha podido guardar', 'Inténtalo de nuevo en unos segundos.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAnalyze() {
+    setAnalyzing(true);
+    setAnalysisError(null);
+    try {
+      setProfile(await analyzeColors());
+      router.push('/profile/palette');
+    } catch (error) {
+      setAnalysisError(
+        error instanceof AiError ? error.message : 'No hemos podido completar el análisis.',
+      );
+    } finally {
+      setAnalyzing(false);
     }
   }
 
@@ -113,9 +132,33 @@ export default function SelfieScreen() {
           <AppText variant="heading">Análisis de colorimetría</AppText>
           <AppText color="textSecondary">
             {profile.analyzed_at
-              ? `Tu estación: ${profile.season}`
-              : 'Selfie guardado. El análisis con IA estará disponible muy pronto.'}
+              ? `Tu estación: ${profile.season}. Puedes repetir el análisis si cambias el selfie.`
+              : 'Selfie guardado. La IA analizará tu subtono, contraste y estación de color.'}
           </AppText>
+          {analysisError && (
+            <AppText variant="caption" color="danger" accessibilityLiveRegion="polite">
+              {analysisError}
+            </AppText>
+          )}
+          <View style={styles.actions}>
+            <Button
+              title={profile.analyzed_at ? 'Repetir análisis' : 'Analizar mis colores'}
+              onPress={handleAnalyze}
+              loading={analyzing}
+            />
+            {profile.analyzed_at && (
+              <Button
+                title="Ver mi paleta"
+                variant="secondary"
+                onPress={() => router.push('/profile/palette')}
+              />
+            )}
+          </View>
+          {analyzing && (
+            <AppText variant="caption" color="textSecondary" center>
+              Esto puede tardar unos segundos…
+            </AppText>
+          )}
         </Card>
       )}
 
@@ -130,6 +173,7 @@ export default function SelfieScreen() {
 }
 
 const styles = StyleSheet.create({
+  actions: { gap: Spacing.sm, marginTop: Spacing.xs },
   tip: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   tipText: { flex: 1 },
 });
