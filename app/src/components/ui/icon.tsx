@@ -29,6 +29,14 @@ const IconMap = {
   },
   restyle: { ios: 'arrow.triangle.2.circlepath', android: 'refresh', web: 'refresh' },
   mail: { ios: 'envelope', android: 'mail', web: 'mail' },
+  camera: { ios: 'camera', android: 'photo_camera', web: 'photo_camera' },
+  gallery: { ios: 'photo.on.rectangle', android: 'photo_library', web: 'photo_library' },
+  image: { ios: 'photo', android: 'image', web: 'image' },
+  trash: { ios: 'trash', android: 'delete', web: 'delete' },
+  plus: { ios: 'plus', android: 'add', web: 'add' },
+  close: { ios: 'xmark', android: 'close', web: 'close' },
+  filter: { ios: 'line.3.horizontal.decrease', android: 'tune', web: 'tune' },
+  search: { ios: 'magnifyingglass', android: 'search', web: 'search' },
 } satisfies Record<string, SymbolViewProps['name']>;
 
 export type IconName = keyof typeof IconMap;

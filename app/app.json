@@ -43,7 +43,15 @@
         }
       ],
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "LuxeMatch usa tus fotos para añadir prendas a tu armario y analizar tu colorimetría.",
+          "cameraPermission": "LuxeMatch usa la cámara para fotografiar tus prendas y hacerte un selfie para el análisis de color.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

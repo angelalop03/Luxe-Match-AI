@@ -55,13 +55,14 @@ Para reiniciar la base de datos con el esquema y los datos de prueba: `npx supab
 ```
 app/                 Rutas (cada archivo es una pantalla)
   (auth)/            sign-in, sign-up, forgot-password
-  (tabs)/            index (dashboard), wardrobe, outfits, profile/
+  (tabs)/            index (dashboard), wardrobe/, outfits, profile/
   onboarding.tsx     Quiz inicial
   reset-password.tsx Nueva contraseña (desde el email)
   _layout.tsx        Fuentes, AuthProvider y rutas protegidas
 components/ui/       Botón, campo de texto, chip, tarjeta, icono…
 features/onboarding/ Preguntas y componente del quiz
-lib/                 Cliente Supabase, enlaces de auth, validaciones
+features/wardrobe/   Opciones de prendas, filtros, tarjeta y formulario
+lib/                 Cliente Supabase, imágenes (picker, compresión, subida), auth
 providers/           AuthProvider (sesión + perfil)
 services/            Acceso a datos (perfil, analytics)
 ```
@@ -72,7 +73,7 @@ Las rutas protegidas del layout raíz deciden qué ve el usuario: sin sesión �
 
 - [x] **Fase 0** · Sistema de diseño luxury y estructura modular
 - [x] **Fase 1** · Registro, login, logout y recuperación de contraseña (RF1) · perfil editable (RF2) · quiz de onboarding (RF3) · esquema completo con RLS
-- [ ] **Fase 2** · Subida de imágenes y armario digital (RF4, RF5)
+- [x] **Fase 2** · Subida de imágenes con vista previa y compresión (RF4) · armario digital: añadir, editar, eliminar, categorizar y filtrar prendas (RF5) · selfie para colorimetría · dashboard con datos reales
 - [ ] **Fase 3** · Escaneo IA de prendas y colorimetría (RF6, RF7)
 - [ ] **Fase 4** · Generación y guardado de outfits (RF8, RF10, RB1–RB11)
 - [ ] **Fase 5** · Ecommerce, Restyle y dashboard completo (RF9, RF11, RF14)

@@ -1,7 +1,10 @@
 export { Button } from './button';
 export { Card } from './card';
 export { Chip } from './chip';
+export { EmptyState } from './empty-state';
+export { Header, IconButton } from './header';
 export { Icon, type IconName } from './icon';
+export { Pill } from './pill';
 export { ProgressBar } from './progress-bar';
 export { Screen } from './screen';
 export { AppText, type AppTextVariant } from './text';

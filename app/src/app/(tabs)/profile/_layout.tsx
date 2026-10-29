@@ -6,6 +6,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="edit" />
       <Stack.Screen name="preferences" />
+      <Stack.Screen name="selfie" />
     </Stack>
   );
 }

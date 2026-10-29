@@ -1,9 +1,12 @@
 import { router, type Href } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { AppText, Card, Icon, Screen, type IconName } from '@/components/ui';
+import { AppText, Button, Card, Icon, Screen, type IconName } from '@/components/ui';
 import { MaxWideContentWidth, Spacing } from '@/constants/theme';
 import { optionLabel } from '@/features/onboarding/questions';
+import { GarmentCard } from '@/features/wardrobe/garment-card';
+import { useGarments } from '@/features/wardrobe/use-garments';
+import { useSignedUrls } from '@/hooks/use-signed-urls';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -14,39 +17,51 @@ type DashboardSection = {
   href: Href;
 };
 
-/** Dashboard del usuario (RF11). Las secciones se irán llenando en cada fase. */
-const Sections: DashboardSection[] = [
-  {
-    title: 'Mi armario',
-    description: 'Digitaliza tus prendas y deja que la IA las clasifique.',
-    icon: 'wardrobe',
-    href: '/wardrobe',
-  },
-  {
-    title: 'Outfits guardados',
-    description: 'Tus looks favoritos para cada ocasión.',
-    icon: 'heart',
-    href: '/outfits',
-  },
-  {
-    title: 'Recomendaciones',
-    description: 'Piezas que completan tu armario sin duplicarlo.',
-    icon: 'bag',
-    href: '/outfits',
-  },
-  {
-    title: 'Perfil de color',
-    description: 'Descubre tu paleta con un selfie.',
-    icon: 'palette',
-    href: '/profile',
-  },
-];
+/** Prendas mínimas para empezar a generar outfits con variedad. */
+const GarmentsForFirstOutfits = 5;
 
+/** Dashboard del usuario (RF11). */
 export default function DashboardScreen() {
   const { profile } = useAuth();
   const theme = useTheme();
+  const { garments } = useGarments();
+  const recent = (garments ?? []).slice(0, 6);
+  const imageUrls = useSignedUrls('garments', recent.map((g) => g.image_path));
+
   const firstName = profile?.full_name?.split(' ')[0];
-  const styles_ = profile?.style_preferences.styles ?? [];
+  const userStyles = profile?.style_preferences.styles ?? [];
+  const total = garments?.length ?? 0;
+  const remaining = Math.max(GarmentsForFirstOutfits - total, 0);
+
+  const sections: DashboardSection[] = [
+    {
+      title: 'Mi armario',
+      description:
+        total === 0
+          ? 'Digitaliza tus prendas con una foto.'
+          : `${total} ${total === 1 ? 'prenda' : 'prendas'} en tu armario.`,
+      icon: 'wardrobe',
+      href: '/wardrobe',
+    },
+    {
+      title: 'Outfits guardados',
+      description: 'Tus looks favoritos para cada ocasión.',
+      icon: 'heart',
+      href: '/outfits',
+    },
+    {
+      title: 'Recomendaciones',
+      description: 'Piezas que completan tu armario sin duplicarlo.',
+      icon: 'bag',
+      href: '/outfits',
+    },
+    {
+      title: 'Perfil de color',
+      description: 'Descubre tu paleta con un selfie.',
+      icon: 'palette',
+      href: '/profile/selfie',
+    },
+  ];
 
   return (
     <Screen edges={['top']} maxWidth={MaxWideContentWidth}>
@@ -55,9 +70,9 @@ export default function DashboardScreen() {
           Tu estilista personal
         </AppText>
         <AppText variant="display">{firstName ? `Hola, ${firstName}` : 'Hola'}</AppText>
-        {styles_.length > 0 && (
+        {userStyles.length > 0 && (
           <AppText color="textSecondary">
-            Estilo {styles_.map((s) => optionLabel('styles', s).toLowerCase()).join(' · ')}
+            Estilo {userStyles.map((s) => optionLabel('styles', s).toLowerCase()).join(' · ')}
           </AppText>
         )}
       </View>
@@ -67,15 +82,46 @@ export default function DashboardScreen() {
           Siguiente paso
         </AppText>
         <AppText variant="title" style={{ color: theme.onPrimary }}>
-          Digitaliza tu armario
+          {remaining > 0 ? 'Digitaliza tu armario' : 'Tu armario está listo'}
         </AppText>
         <AppText style={{ color: theme.onPrimary }}>
-          Con unas pocas prendas ya podremos proponerte tus primeros looks.
+          {remaining > 0
+            ? `Añade ${remaining} ${remaining === 1 ? 'prenda más' : 'prendas más'} y podremos proponerte tus primeros looks.`
+            : 'Muy pronto podrás generar outfits con tus propias prendas.'}
         </AppText>
+        <View style={styles.heroAction}>
+          <HeroButton
+            label="Añadir prenda"
+            onPress={() => router.push('/wardrobe/new')}
+            color={theme.onPrimary}
+          />
+        </View>
       </Card>
 
+      {recent.length > 0 && (
+        <View style={styles.recent}>
+          <View style={styles.recentHeader}>
+            <AppText variant="heading">Añadidas recientemente</AppText>
+            <Button title="Ver todo" variant="ghost" onPress={() => router.navigate('/wardrobe')} />
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
+            {recent.map((garment) => (
+              <View key={garment.id} style={styles.stripItem}>
+                <GarmentCard
+                  garment={garment}
+                  imageUrl={garment.image_path ? imageUrls[garment.image_path] : undefined}
+                  onPress={() =>
+                    router.push({ pathname: '/wardrobe/[id]', params: { id: garment.id } })
+                  }
+                />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       <View style={styles.grid}>
-        {Sections.map((section) => (
+        {sections.map((section) => (
           <View key={section.title} style={styles.cell}>
             <Card
               onPress={() => router.navigate(section.href)}
@@ -97,9 +143,34 @@ export default function DashboardScreen() {
   );
 }
 
+/** Botón con borde claro para usar sobre la tarjeta oscura. */
+function HeroButton({ label, onPress, color }: { label: string; onPress: () => void; color: string }) {
+  return (
+    <Card
+      onPress={onPress}
+      accessibilityLabel={label}
+      style={[styles.heroButton, { borderColor: color, backgroundColor: 'transparent' }]}>
+      <View style={styles.heroButtonContent}>
+        <Icon name="plus" size={18} tintColor={color} />
+        <AppText variant="label" style={[styles.heroButtonLabel, { color }]}>
+          {label}
+        </AppText>
+      </View>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
   header: { gap: Spacing.xs },
   hero: { gap: Spacing.xs, paddingVertical: Spacing.xl },
+  heroAction: { flexDirection: 'row', marginTop: Spacing.sm },
+  heroButton: { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: 999 },
+  heroButtonContent: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+  heroButtonLabel: { letterSpacing: 1.5, textTransform: 'uppercase' },
+  recent: { gap: Spacing.sm },
+  recentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  strip: { gap: Spacing.md },
+  stripItem: { width: 140 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
