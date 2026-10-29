@@ -1,0 +1,12 @@
+# Supabase local
+supabase/.branches
+supabase/.temp
+supabase/.env
+
+# Entorno
+.env
+.env*.local
+
+# Sistema
+.DS_Store
+Thumbs.db
