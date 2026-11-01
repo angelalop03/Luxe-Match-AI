@@ -7,6 +7,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { OutfitCollage } from '@/features/outfits/outfit-collage';
 import { occasionLabel } from '@/features/outfits/outfit-options';
 import { OutfitPieces } from '@/features/outfits/outfit-pieces';
+import { CompleteTheLook } from '@/features/shop/complete-the-look';
 import { seasonLabel } from '@/features/wardrobe/garment-options';
 import { useGarments } from '@/features/wardrobe/use-garments';
 import { useSignedUrls } from '@/hooks/use-signed-urls';
@@ -235,6 +236,8 @@ export default function OutfitDetailScreen() {
           </AppText>
         </View>
       )}
+
+      <CompleteTheLook outfit={current} />
 
       <Button title="Editar outfit" variant="secondary" onPress={startEditing} />
       <Button title="Eliminar outfit" variant="ghost" onPress={handleDelete} />

@@ -80,12 +80,21 @@ export default function EditGarmentScreen() {
         router.back();
       }}
       extraActions={
-        <Button
-          title="Eliminar prenda"
-          variant="ghost"
-          loading={deleting}
-          onPress={() => handleDelete(garment)}
-        />
+        <>
+          <Button
+            title="Ideas de Restyle"
+            variant="secondary"
+            onPress={() =>
+              router.push({ pathname: '/wardrobe/restyle/[id]', params: { id: garment.id } })
+            }
+          />
+          <Button
+            title="Eliminar prenda"
+            variant="ghost"
+            loading={deleting}
+            onPress={() => handleDelete(garment)}
+          />
+        </>
       }
     />
   );

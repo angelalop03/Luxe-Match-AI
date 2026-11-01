@@ -67,6 +67,16 @@ export async function updateGarment(
 }
 
 /**
+ * Ids de las prendas que aparecen en algún outfit guardado. Las que no
+ * aparecen son candidatas a Restyle (RF14: detectar prendas a transformar).
+ */
+export async function listGarmentIdsInOutfits(): Promise<Set<string>> {
+  const { data, error } = await supabase.from('outfit_items').select('garment_id');
+  if (error) throw error;
+  return new Set((data ?? []).map((row) => row.garment_id as string));
+}
+
+/**
  * Borra la prenda y su imagen. Al ser un borrado real, también desaparece de
  * los outfits guardados y no podrá usarse en recomendaciones futuras (RB10).
  */

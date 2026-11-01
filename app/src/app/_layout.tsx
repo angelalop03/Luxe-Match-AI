@@ -103,6 +103,7 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={!!session && isOnboarded} redirectTo={home}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="shop" />
       </Stack.Protected>
       <Stack.Screen name="reset-password" options={{ presentation: 'modal' }} />
     </Stack>

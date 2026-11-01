@@ -57,6 +57,9 @@ Sin clave, la app sigue funcionando: avisa de que la IA no está configurada y p
 | `scan-garment` | Detecta tipo, color, estilo, ocasión y temporada de una prenda (RF6) | 30 / hora |
 | `analyze-colors` | Estación de color, paleta, colores recomendados y a evitar a partir del selfie (RF7) | 5 / hora |
 | `generate-outfits` | Outfits por ocasión y temporada solo con prendas del armario, con explicación estilística (RF8) | 20 / hora |
+| `restyle-garment` | Ideas para transformar, llevar de otra forma o actualizar una prenda, con accesorios complementarios (RF14) | 10 / hora |
+
+Las recomendaciones de compra (RF9) se calculan en la app (`features/shop/recommend.ts`) a partir del catálogo `products`: puntúan ocasión, temporada, estilo, paleta y presupuesto, y descartan cualquier producto que duplique una prenda que ya tienes (misma categoría y color parecido, RB6). Los clics a tienda se registran como `ecommerce_click`. El catálogo incluido es de demostración (`supabase/seed.sql`); en producción se sustituiría por un feed real o una API de afiliación.
 
 `generate-outfits` filtra primero por reglas (temporada, prendas existentes), pide a Claude las combinaciones y valida cada propuesta (parte de arriba + de abajo, o vestido). Si la IA no está disponible, usa un generador por reglas que puntúa las prendas por ocasión, estilo y paleta, así la app sigue funcionando sin clave.
 
@@ -100,7 +103,7 @@ Las rutas protegidas del layout raíz deciden qué ve el usuario: sin sesión �
 - [x] **Fase 2** · Subida de imágenes con vista previa y compresión (RF4) · armario digital: añadir, editar, eliminar, categorizar y filtrar prendas (RF5) · selfie para colorimetría · dashboard con datos reales
 - [x] **Fase 3** · Escaneo IA de prendas que rellena el formulario (RF6) · análisis de colorimetría con paleta, colores estrella y a evitar (RF7)
 - [x] **Fase 4** · Generación de outfits por ocasión y temporada (RF8) · guardar, editar, marcar favoritos y eliminar (RF10) · validación de composición en la base de datos (RB9)
-- [ ] **Fase 5** · Ecommerce, Restyle y dashboard completo (RF9, RF11, RF14)
+- [x] **Fase 5** · Recomendaciones de compra sin duplicar el armario y "Completa el look" (RF9, RB6) · Restyle con detección de prendas olvidadas (RF14) · dashboard completo (RF11) · clics ecommerce en analytics (RF13)
 - [ ] **Fase 6** · Analytics, accesibilidad, tests y publicación
 
 ## Pasar a producción

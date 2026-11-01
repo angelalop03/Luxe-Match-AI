@@ -25,13 +25,20 @@ export default function WardrobeScreen() {
   const total = garments?.length ?? 0;
   const isFiltered = filter.category !== null || filter.season !== null || filter.query !== '';
 
-  const addButton = (
-    <IconButton
-      icon="plus"
-      label="Añadir prenda"
-      variant="filled"
-      onPress={() => router.push('/wardrobe/new')}
-    />
+  const headerActions = (
+    <View style={styles.headerActions}>
+      <IconButton
+        icon="restyle"
+        label="Ideas de Restyle"
+        onPress={() => router.push('/wardrobe/restyle')}
+      />
+      <IconButton
+        icon="plus"
+        label="Añadir prenda"
+        variant="filled"
+        onPress={() => router.push('/wardrobe/new')}
+      />
+    </View>
   );
 
   return (
@@ -39,7 +46,7 @@ export default function WardrobeScreen() {
       <Header
         overline={total === 1 ? '1 prenda' : `${total} prendas`}
         title="Tu armario"
-        right={total > 0 ? addButton : undefined}
+        right={total > 0 ? headerActions : undefined}
       />
 
       {loading && <ActivityIndicator color={theme.accent} style={styles.loader} />}
@@ -149,6 +156,7 @@ function FilterRow({ label, children }: { label: string; children: ReactNode }) 
 
 const styles = StyleSheet.create({
   loader: { marginTop: Spacing.xl },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   errorBox: { gap: Spacing.md },
   filters: { gap: Spacing.sm },
   filterRow: { gap: Spacing.xs, paddingVertical: 2 },

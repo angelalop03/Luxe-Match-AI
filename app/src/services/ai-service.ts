@@ -3,7 +3,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import type { PreparedImage } from '@/lib/images';
 import { supabase } from '@/lib/supabase';
 import type { ColorProfile } from '@/types/color-profile';
-import type { GarmentCategory, Season } from '@/types/garment';
+import type { GarmentCategory, Restyle, Season } from '@/types/garment';
 import type { OutfitProposal, OutfitRequest, OutfitSource } from '@/types/outfit';
 
 /** Respuesta de la Edge Function `scan-garment` (RF6). */
@@ -72,4 +72,11 @@ export function analyzeColors() {
  */
 export function generateOutfits(request: OutfitRequest) {
   return invoke<{ source: OutfitSource; outfits: OutfitProposal[] }>('generate-outfits', request);
+}
+
+/** Genera y guarda ideas de Restyle para una prenda (RF14). */
+export function restyleGarment(garmentId: string) {
+  return invoke<{ source: Restyle['source']; restyle: Restyle }>('restyle-garment', {
+    garment_id: garmentId,
+  });
 }
