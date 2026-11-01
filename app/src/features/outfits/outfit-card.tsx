@@ -47,7 +47,8 @@ export function OutfitCard({ outfit, imageUrls, onPress, onToggleFavorite }: Out
           accessibilityLabel={outfit.is_favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
           accessibilityState={{ selected: outfit.is_favorite }}
           onPress={onToggleFavorite}
-          hitSlop={10}>
+          hitSlop={6}
+          style={styles.favorite}>
           <Icon
             name="heart"
             size={20}
@@ -63,5 +64,7 @@ const styles = StyleSheet.create({
   card: { gap: Spacing.xs },
   info: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.xs },
   text: { flex: 1, gap: 2 },
+  // Área táctil de 36 px sin desplazar el diseño (WCAG 2.5.8).
+  favorite: { padding: Spacing.xs, margin: -Spacing.xs },
   pressed: { opacity: 0.85 },
 });

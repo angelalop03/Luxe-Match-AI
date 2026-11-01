@@ -37,6 +37,7 @@ const IconMap = {
   close: { ios: 'xmark', android: 'close', web: 'close' },
   filter: { ios: 'line.3.horizontal.decrease', android: 'tune', web: 'tune' },
   search: { ios: 'magnifyingglass', android: 'search', web: 'search' },
+  lock: { ios: 'lock', android: 'lock', web: 'lock' },
 } satisfies Record<string, SymbolViewProps['name']>;
 
 export type IconName = keyof typeof IconMap;

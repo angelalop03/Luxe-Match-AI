@@ -6,19 +6,41 @@ import { AppText, Button, Card, Icon, Screen, type IconName } from '@/components
 import { Radius, Spacing } from '@/constants/theme';
 import { optionLabel, QuizSteps } from '@/features/onboarding/questions';
 import { useTheme } from '@/hooks/use-theme';
+import { confirm, notify } from '@/lib/confirm';
 import { useAuth } from '@/providers/auth-provider';
+import { deleteAccount } from '@/services/account-service';
 import type { StylePreferences } from '@/types/profile';
 
 export default function ProfileScreen() {
   const { user, profile, signOut } = useAuth();
   const theme = useTheme();
   const [signingOut, setSigningOut] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const preferences = profile?.style_preferences ?? {};
   const initial = (profile?.full_name ?? user?.email ?? '?').charAt(0).toUpperCase();
 
   async function handleSignOut() {
     setSigningOut(true);
     await signOut();
+  }
+
+  async function handleDeleteAccount() {
+    const confirmed = await confirm({
+      title: 'Eliminar mi cuenta',
+      message:
+        'Se borrarán para siempre tu cuenta, tus prendas, fotos, outfits y perfil de color. Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar todo',
+      destructive: true,
+    });
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await deleteAccount();
+    } catch (error) {
+      setDeleting(false);
+      notify('No se ha podido eliminar', error instanceof Error ? error.message : 'Inténtalo de nuevo.');
+    }
   }
 
   return (
@@ -70,6 +92,13 @@ export default function ProfileScreen() {
           hint="Tu estación de color y colores recomendados"
           onPress={() => router.push('/profile/palette')}
         />
+        <Divider />
+        <MenuRow
+          icon="lock"
+          label="Privacidad"
+          hint="Qué datos guardamos y para qué"
+          onPress={() => router.push('/privacy')}
+        />
       </Card>
 
       <Button
@@ -77,6 +106,13 @@ export default function ProfileScreen() {
         variant="secondary"
         onPress={handleSignOut}
         loading={signingOut}
+      />
+      <Button
+        title="Eliminar mi cuenta"
+        variant="ghost"
+        onPress={handleDeleteAccount}
+        loading={deleting}
+        accessibilityHint="Borra para siempre tu cuenta y todos tus datos"
       />
     </Screen>
   );

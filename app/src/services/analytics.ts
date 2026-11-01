@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 
 /** Eventos registrados para RF13. Añade aquí los nuevos para mantenerlos tipados. */
 export type AnalyticsEvent =
+  | 'screen_view'
   | 'sign_up'
   | 'sign_in'
   | 'onboarding_completed'

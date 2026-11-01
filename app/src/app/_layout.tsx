@@ -1,15 +1,19 @@
-import {
-  CormorantGaramond_500Medium,
-  CormorantGaramond_600SemiBold,
-} from '@expo-google-fonts/cormorant-garamond';
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-} from '@expo-google-fonts/inter';
+// Importamos cada peso por separado para no empaquetar las 29 variantes de
+// las familias (RNF2: solo se incluyen las 5 fuentes que usa la app).
+import { CormorantGaramond_500Medium } from '@expo-google-fonts/cormorant-garamond/500Medium';
+import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-garamond/600SemiBold';
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { useFonts } from 'expo-font';
 import * as Linking from 'expo-linking';
-import { DarkTheme, DefaultTheme, router, ThemeProvider } from 'expo-router';
+import {
+  DarkTheme,
+  DefaultTheme,
+  router,
+  ThemeProvider,
+  type ErrorBoundaryProps,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { Stack } from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
@@ -17,6 +21,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { ConfigMissing } from '@/components/config-missing';
+import { ScreenTracker } from '@/components/screen-tracker';
 import { AppText, Button, Screen } from '@/components/ui';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -25,6 +30,29 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
 
 SplashScreen.preventAutoHideAsync();
+
+/**
+ * Pantalla de error amable si una pantalla falla al renderizar (RNF7): en
+ * lugar de una pantalla en blanco, se ofrece reintentar.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  useEffect(() => {
+    console.error('[ErrorBoundary]', error);
+    SplashScreen.hideAsync();
+  }, [error]);
+
+  return (
+    <Screen centered>
+      <AppText variant="title" center>
+        Algo no ha ido bien
+      </AppText>
+      <AppText color="textSecondary" center>
+        Ha ocurrido un error inesperado. Tus datos están a salvo.
+      </AppText>
+      <Button title="Reintentar" onPress={retry} />
+    </Screen>
+  );
+}
 
 export default function RootLayout() {
   const scheme = useColorScheme();
@@ -94,19 +122,24 @@ function RootNavigator() {
   const home = !session ? '/sign-in' : !isOnboarded ? '/onboarding' : '/';
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!session} redirectTo={home}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
-      <Stack.Protected guard={!!session && !isOnboarded} redirectTo={home}>
-        <Stack.Screen name="onboarding" />
-      </Stack.Protected>
-      <Stack.Protected guard={!!session && isOnboarded} redirectTo={home}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="shop" />
-      </Stack.Protected>
-      <Stack.Screen name="reset-password" options={{ presentation: 'modal' }} />
-    </Stack>
+    <>
+      {session && <ScreenTracker />}
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={!session} redirectTo={home}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
+        <Stack.Protected guard={!!session && !isOnboarded} redirectTo={home}>
+          <Stack.Screen name="onboarding" />
+        </Stack.Protected>
+        <Stack.Protected guard={!!session && isOnboarded} redirectTo={home}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="shop" />
+        </Stack.Protected>
+        <Stack.Screen name="reset-password" options={{ presentation: 'modal' }} />
+        {/* Accesible con y sin sesión: se enlaza desde el registro. */}
+        <Stack.Screen name="privacy" />
+      </Stack>
+    </>
   );
 }
 

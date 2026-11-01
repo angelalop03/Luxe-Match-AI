@@ -130,6 +130,11 @@ export default function SignUpScreen() {
           selected={acceptedTerms}
           onPress={() => setAcceptedTerms((v) => !v)}
         />
+        <Link href="/privacy">
+          <AppText variant="label" color="accentText">
+            Leer la política de privacidad
+          </AppText>
+        </Link>
         {errors.terms && (
           <AppText variant="caption" color="danger">
             {errors.terms}
