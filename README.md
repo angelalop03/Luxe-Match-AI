@@ -63,7 +63,7 @@ Sin clave la app sigue funcionando: el escaneo avisa de que la IA no está confi
 
 `generate-outfits` filtra primero por reglas (temporada, prendas existentes), pide a Claude las combinaciones y valida cada propuesta (parte de arriba + de abajo, o vestido). Si la IA no está disponible, usa un generador por reglas que puntúa las prendas por ocasión, estilo y paleta.
 
-Las recomendaciones de compra (RF9) se calculan en la app (`features/shop/recommend.ts`) a partir del catálogo `products`: puntúan ocasión, temporada, estilo, paleta y presupuesto, y descartan cualquier producto que duplique una prenda que ya tienes (misma categoría y color parecido, RB6). El catálogo incluido es de demostración (`supabase/seed.sql`); en producción se sustituiría por un feed real o una API de afiliación.
+Las recomendaciones de compra (RF9) se calculan en la app (`features/shop/recommend.ts`) a partir del catálogo `products`: puntúan ocasión, temporada, estilo, paleta y presupuesto, y descartan cualquier producto que duplique una prenda que ya tienes (misma categoría y color parecido, RB6). El catálogo incluido es de demostración (`supabase/seed.sql`): marcas y precios son de ejemplo y cada enlace abre una búsqueda de productos similares en Google Shopping. En producción se sustituiría por un feed real o una API de afiliación con enlaces directos a cada producto.
 
 ## Arquitectura
 

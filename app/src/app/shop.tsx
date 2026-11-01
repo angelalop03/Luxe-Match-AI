@@ -70,7 +70,8 @@ export default function ShopScreen() {
       </View>
 
       <AppText variant="caption" color="textSecondary">
-        Catálogo de demostración: marcas, precios y enlaces son de ejemplo.
+        Catálogo de demostración: marcas y precios son de ejemplo, y cada enlace abre una
+        búsqueda de productos similares en Google Shopping.
       </AppText>
     </Screen>
   );
