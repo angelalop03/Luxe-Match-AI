@@ -1,5 +1,6 @@
 import * as WebBrowser from 'expo-web-browser';
 
+import type { Store } from '@/features/shop/stores';
 import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types/product';
 
@@ -8,14 +9,14 @@ import { track } from './analytics';
 const CacheTtlMs = 10 * 60 * 1000;
 let cache: { products: Product[]; loadedAt: number } | null = null;
 
-/** Catálogo activo. Es pequeño y cambia poco, así que se cachea 10 minutos. */
+/** Catálogo de ideas activo. Es pequeño y cambia poco: se cachea 10 minutos. */
 export async function listProducts(): Promise<Product[]> {
   if (cache && Date.now() - cache.loadedAt < CacheTtlMs) return cache.products;
 
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id, name, brand, category, color_hex, color_name, price, currency, image_url, external_url, styles, occasions, seasons',
+      'id, name, brand, category, color_hex, color_name, price, currency, image_url, external_url, search_term, styles, occasions, seasons',
     )
     .eq('is_active', true);
   if (error) throw error;
@@ -25,28 +26,26 @@ export async function listProducts(): Promise<Product[]> {
   return products;
 }
 
+export type ShopContext = { source: string; outfitId?: string; garmentId?: string };
+
 /**
- * Abre el producto en la tienda externa y registra el clic (RF9, RF13).
+ * Abre la búsqueda de la tienda elegida y registra el clic (RF9, RF13).
  * `source` indica desde qué pantalla se abrió: outfit, para-ti, restyle…
  */
-export async function openProduct(
+export async function openStoreSearch(
   product: Product,
-  context: { source: string; outfitId?: string; garmentId?: string },
+  store: Store,
+  term: string,
+  context: ShopContext,
 ) {
   track('ecommerce_click', {
     product_id: product.id,
     category: product.category,
-    price: product.price,
+    store: store.id,
+    search_term: term,
     source: context.source,
     outfit_id: context.outfitId,
     garment_id: context.garmentId,
   });
-  await WebBrowser.openBrowserAsync(product.external_url);
-}
-
-export function formatPrice(product: Product) {
-  if (product.price === null) return null;
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: product.currency }).format(
-    product.price,
-  );
+  await WebBrowser.openBrowserAsync(store.searchUrl(term));
 }

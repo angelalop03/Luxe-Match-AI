@@ -1,11 +1,9 @@
-import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText, Icon } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
 import { categoryLabel } from '@/features/wardrobe/garment-options';
 import { useTheme } from '@/hooks/use-theme';
-import { formatPrice } from '@/services/product-service';
 import type { Recommendation } from '@/types/product';
 
 type ProductCardProps = {
@@ -13,49 +11,49 @@ type ProductCardProps = {
   onOpen: () => void;
 };
 
-/** Producto recomendado con enlace externo a la tienda (RF9). */
+/**
+ * Idea de compra recomendada (RF9): qué buscar y en qué color. Al pulsarla
+ * se elige en qué tienda real buscarla.
+ */
 export function ProductCard({ recommendation, onOpen }: ProductCardProps) {
   const theme = useTheme();
   const { product, reasons } = recommendation;
-  const price = formatPrice(product);
 
   return (
     <Pressable
-      accessibilityRole="link"
-      accessibilityLabel={`${product.name}${product.brand ? ` de ${product.brand}` : ''}${price ? `, ${price}` : ''}. Abrir en la tienda`}
+      accessibilityRole="button"
+      accessibilityLabel={`${product.name}${product.color_name ? `, ${product.color_name}` : ''}. Buscar en tiendas`}
       onPress={onOpen}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <View
         style={[
-          styles.image,
+          styles.tile,
           { backgroundColor: product.color_hex ?? theme.surfaceMuted, borderColor: theme.border },
         ]}>
-        {product.image_url ? (
-          <Image source={{ uri: product.image_url }} style={StyleSheet.absoluteFill} contentFit="cover" />
-        ) : (
-          <View style={[styles.categoryBadge, { backgroundColor: theme.surface }]}>
-            <AppText variant="caption">{categoryLabel(product.category)}</AppText>
-          </View>
-        )}
+        <View style={[styles.badge, { backgroundColor: theme.surface }]}>
+          <AppText variant="caption">{categoryLabel(product.category)}</AppText>
+        </View>
       </View>
       <View style={styles.info}>
-        {product.brand && (
-          <AppText variant="overline" color="accentText" numberOfLines={1}>
-            {product.brand}
-          </AppText>
-        )}
         <AppText variant="label" numberOfLines={2}>
           {product.name}
         </AppText>
-        <View style={styles.row}>
-          {price && <AppText variant="bodyMedium">{price}</AppText>}
-          <Icon name="bag" size={16} color="textSecondary" />
-        </View>
+        {product.color_name && (
+          <AppText variant="caption" color="textSecondary" numberOfLines={1}>
+            {product.color_name}
+          </AppText>
+        )}
         {reasons[0] && (
           <AppText variant="caption" color="textSecondary" numberOfLines={1}>
             {reasons[0]}
           </AppText>
         )}
+        <View style={styles.cta}>
+          <Icon name="search" size={14} color="accentText" />
+          <AppText variant="label" color="accentText">
+            Buscar en tiendas
+          </AppText>
+        </View>
       </View>
     </Pressable>
   );
@@ -63,7 +61,7 @@ export function ProductCard({ recommendation, onOpen }: ProductCardProps) {
 
 const styles = StyleSheet.create({
   card: { gap: Spacing.xs },
-  image: {
+  tile: {
     aspectRatio: 3 / 4,
     borderRadius: Radius.md,
     borderWidth: 1,
@@ -71,13 +69,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     padding: Spacing.xs,
   },
-  categoryBadge: {
+  badge: {
     alignSelf: 'flex-start',
     paddingHorizontal: Spacing.xs,
     paddingVertical: 2,
     borderRadius: Radius.pill,
   },
   info: { gap: 2 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cta: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xxs, marginTop: Spacing.xxs },
   pressed: { opacity: 0.85 },
 });

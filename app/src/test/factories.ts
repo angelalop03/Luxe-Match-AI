@@ -40,6 +40,7 @@ export function makeProduct(overrides: Partial<Product> = {}): Product {
     currency: 'EUR',
     image_url: null,
     external_url: 'https://example.com',
+    search_term: null,
     styles: [],
     occasions: [],
     seasons: [],

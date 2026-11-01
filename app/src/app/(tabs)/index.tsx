@@ -19,7 +19,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { notify } from '@/lib/confirm';
 import { useAuth } from '@/providers/auth-provider';
 import { setFavorite } from '@/services/outfit-service';
-import { openProduct } from '@/services/product-service';
 import type { Outfit } from '@/types/outfit';
 
 /** Prendas mínimas para empezar a generar outfits con variedad. */
@@ -183,7 +182,7 @@ export default function DashboardScreen() {
           </AppText>
           <ProductStrip
             recommendations={recommendations}
-            onOpen={(r) => openProduct(r.product, { source: 'dashboard' })}
+            context={{ source: 'dashboard' }}
           />
         </Section>
       )}

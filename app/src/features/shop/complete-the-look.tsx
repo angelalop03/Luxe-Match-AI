@@ -3,7 +3,6 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
-import { openProduct } from '@/services/product-service';
 import type { Outfit } from '@/types/outfit';
 
 import { ProductStrip } from './product-strip';
@@ -42,7 +41,7 @@ export function CompleteTheLook({ outfit }: { outfit: Outfit }) {
       </View>
       <ProductStrip
         recommendations={recommendations}
-        onOpen={(r) => openProduct(r.product, { source: 'outfit', outfitId: outfit.id })}
+        context={{ source: 'outfit', outfitId: outfit.id }}
       />
     </View>
   );

@@ -68,3 +68,37 @@ values
    'https://www.google.com/search?tbm=shop&q=bufanda+de+lana+gruesa+verde+oliva', '{bohemio,clasico}', '{casual,viaje}', '{otono,invierno}'),
   ('Gafas de sol de pasta', 'Óptica Demo', 'accessory', '#6B4A30', 'Carey', 110.00, null,
    'https://www.google.com/search?tbm=shop&q=gafas+de+sol+de+pasta+carey', '{clasico,urbano}', '{casual,viaje}', '{primavera,verano}');
+
+-- Término corto para buscar cada idea en tiendas reales (Zara, Bershka, H&M…).
+update public.products as p set search_term = t.term
+from (values
+  ('Blazer de lana entallado', 'blazer azul marino'),
+  ('Bolso de mano estructurado', 'bolso negro'),
+  ('Camisa de seda', 'camisa satinada crudo'),
+  ('Cinturón de piel fino', 'cinturón piel marrón'),
+  ('Mocasines de piel', 'mocasines piel'),
+  ('Pantalón palazzo de crepé', 'pantalón palazzo marrón'),
+  ('Pañuelo de seda estampado', 'pañuelo estampado'),
+  ('Pendientes de aro dorados', 'pendientes aro dorados'),
+  ('Sandalias de tacón fino', 'sandalias tacón dorado'),
+  ('Vestido midi satinado', 'vestido midi satinado burdeos'),
+  ('Blusa fluida terracota', 'blusa fluida teja'),
+  ('Bolso bandolera pequeño', 'bolso bandolera camel'),
+  ('Botas altas de piel', 'botas altas marrón'),
+  ('Bufanda de lana gruesa', 'bufanda verde'),
+  ('Camiseta de algodón orgánico', 'camiseta blanca algodón'),
+  ('Cazadora de cuero', 'cazadora cuero negra'),
+  ('Clutch joya', 'clutch dorado'),
+  ('Collar de perlas', 'collar perlas'),
+  ('Falda midi plisada', 'falda midi plisada verde'),
+  ('Gafas de sol de pasta', 'gafas de sol carey'),
+  ('Jersey de cachemir cuello vuelto', 'jersey cuello alto negro'),
+  ('Pantalón de lino', 'pantalón lino beige'),
+  ('Salones de ante', 'zapatos salón burdeos'),
+  ('Trench clásico', 'gabardina trench camel'),
+  ('Vaqueros wide leg', 'vaqueros wide leg'),
+  ('Vestido camisero de lino', 'vestido camisero lino'),
+  ('Vestido largo de seda', 'vestido largo satinado azul'),
+  ('Zapatillas de piel blancas', 'zapatillas blancas piel')
+) as t(name, term)
+where p.name = t.name;

@@ -5,20 +5,24 @@ import { AppText, Header, Pill, Screen } from '@/components/ui';
 import { MaxWideContentWidth, Spacing } from '@/constants/theme';
 import { ProductCard } from '@/features/shop/product-card';
 import { recommendProducts } from '@/features/shop/recommend';
+import { StorePicker } from '@/features/shop/store-picker';
+import { Stores } from '@/features/shop/stores';
 import { useRecommendationData } from '@/features/shop/use-recommendations';
 import { Categories } from '@/features/wardrobe/garment-options';
 import { useTheme } from '@/hooks/use-theme';
-import { openProduct } from '@/services/product-service';
 import type { GarmentCategory } from '@/types/garment';
+import type { Recommendation } from '@/types/product';
 
 /**
- * Recomendaciones de compra personalizadas (RF9): piezas que completan el
- * armario según estilo, paleta y presupuesto, sin duplicar lo que ya hay (RB6).
+ * Recomendaciones de compra personalizadas (RF9): qué piezas completan el
+ * armario según estilo, paleta y presupuesto, sin duplicar lo que ya hay
+ * (RB6), y búsqueda directa en tiendas reales.
  */
 export default function ShopScreen() {
   const theme = useTheme();
   const { products, context, error, ready } = useRecommendationData();
   const [category, setCategory] = useState<GarmentCategory | null>(null);
+  const [selected, setSelected] = useState<Recommendation | null>(null);
 
   const recommendations = useMemo(() => {
     if (!products || !context) return [];
@@ -32,8 +36,8 @@ export default function ShopScreen() {
     <Screen maxWidth={MaxWideContentWidth}>
       <Header back overline="Recomendaciones" title="Para ti" />
       <AppText color="textSecondary">
-        Piezas que completan tu armario según tu estilo, tu paleta y tu presupuesto. Nunca te
-        recomendamos algo que ya tienes.
+        Lo que completaría tu armario según tu estilo, tu paleta y tu presupuesto, sin repetir lo
+        que ya tienes. Pulsa una idea para buscarla en tiendas reales.
       </AppText>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills}>
@@ -61,18 +65,21 @@ export default function ShopScreen() {
       <View style={styles.grid}>
         {recommendations.map((recommendation) => (
           <View key={recommendation.product.id} style={styles.cell}>
-            <ProductCard
-              recommendation={recommendation}
-              onOpen={() => openProduct(recommendation.product, { source: 'para-ti' })}
-            />
+            <ProductCard recommendation={recommendation} onOpen={() => setSelected(recommendation)} />
           </View>
         ))}
       </View>
 
       <AppText variant="caption" color="textSecondary">
-        Catálogo de demostración: marcas y precios son de ejemplo, y cada enlace abre una
-        búsqueda de productos similares en Google Shopping.
+        Buscamos en {Stores.map((s) => s.name).join(', ')}. Los productos, precios y disponibilidad
+        son los de cada tienda.
       </AppText>
+
+      <StorePicker
+        recommendation={selected}
+        context={{ source: 'para-ti' }}
+        onClose={() => setSelected(null)}
+      />
     </Screen>
   );
 }

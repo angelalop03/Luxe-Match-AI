@@ -12,6 +12,8 @@ export type Product = {
   currency: string;
   image_url: string | null;
   external_url: string;
+  /** Término corto para buscar la idea en tiendas reales. */
+  search_term: string | null;
   styles: string[];
   occasions: string[];
   seasons: string[];

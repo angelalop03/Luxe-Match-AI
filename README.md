@@ -72,7 +72,14 @@ Sin ninguna clave la app sigue funcionando: el escaneo avisa de que la IA no est
 
 `generate-outfits` filtra primero por reglas (temporada, prendas existentes), pide a Claude las combinaciones y valida cada propuesta (parte de arriba + de abajo, o vestido). Si la IA no está disponible, usa un generador por reglas que puntúa las prendas por ocasión, estilo y paleta.
 
-Las recomendaciones de compra (RF9) se calculan en la app (`features/shop/recommend.ts`) a partir del catálogo `products`: puntúan ocasión, temporada, estilo, paleta y presupuesto, y descartan cualquier producto que duplique una prenda que ya tienes (misma categoría y color parecido, RB6). El catálogo incluido es de demostración (`supabase/seed.sql`): marcas y precios son de ejemplo y cada enlace abre una búsqueda de productos similares en Google Shopping. En producción se sustituiría por un feed real o una API de afiliación con enlaces directos a cada producto.
+Las recomendaciones de compra (RF9) se calculan en la app (`features/shop/recommend.ts`) a partir del catálogo `products`: puntúan ocasión, temporada, estilo, paleta y presupuesto, y descartan cualquier producto que duplique una prenda que ya tienes (misma categoría y color parecido, RB6). El catálogo (`supabase/seed.sql`) es un catálogo de **ideas de compra**: tipo de prenda, color, estilo y un término de búsqueda corto (`search_term`, p. ej. "blazer azul marino"). Al pulsar una idea se elige tienda y se abre su búsqueda con productos reales (`features/shop/stores.ts`):
+
+| Tienda | Cómo se busca |
+|---|---|
+| Zara, Bershka, H&M, Zalando | Buscador propio de la tienda (URL comprobada) |
+| Mango, Pull&Bear, Stradivarius | Google limitado a la web de la tienda |
+
+Cada clic se registra en `ecommerce_click` con la tienda y el término. Para mostrar productos concretos con foto y precio dentro de la app, el siguiente paso es un feed de una red de afiliación (Awin, Tradedoubler…) con las tiendas que lo ofrecen; Zara y Bershka no tienen programa de afiliados.
 
 ## Arquitectura
 

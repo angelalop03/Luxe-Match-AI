@@ -13,7 +13,6 @@ import { useSignedUrls } from '@/hooks/use-signed-urls';
 import { useTheme } from '@/hooks/use-theme';
 import { AiError, restyleGarment } from '@/services/ai-service';
 import { getGarment } from '@/services/garment-service';
-import { openProduct } from '@/services/product-service';
 import type { Garment, Restyle } from '@/types/garment';
 
 const TypeLabels: Record<Restyle['transformations'][number]['type'], string> = {
@@ -160,7 +159,7 @@ export default function RestyleDetailScreen() {
             {accessoryProducts.length > 0 && (
               <ProductStrip
                 recommendations={accessoryProducts}
-                onOpen={(r) => openProduct(r.product, { source: 'restyle', garmentId: current.id })}
+                context={{ source: 'restyle', garmentId: current.id }}
               />
             )}
           </View>
