@@ -1,13 +1,13 @@
 import { Anthropic, betaZodOutputFormat, type z } from './deps.ts';
 import { HttpError } from './http.ts';
 
-/** Modelo usado para todos los análisis y generaciones. */
+/** Modelo de Claude, cuando hay ANTHROPIC_API_KEY. */
 export const ClaudeModel = 'claude-opus-5-5';
 
-type Effort = 'low' | 'medium' | 'high';
-type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
+export type Effort = 'low' | 'medium' | 'high';
+export type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
 
-type GenerateOptions<T extends z.ZodType> = {
+export type GenerateOptions<T extends z.ZodType> = {
   schema: T;
   system: string;
   content: ContentBlock[];
@@ -15,7 +15,7 @@ type GenerateOptions<T extends z.ZodType> = {
   effort: Effort;
 };
 
-type Generated<T extends z.ZodType> = { result: z.infer<T>; usage: Record<string, unknown> };
+export type Generated<T extends z.ZodType> = { result: z.infer<T>; usage: Record<string, unknown> };
 
 let client: InstanceType<typeof Anthropic> | null = null;
 
@@ -31,7 +31,7 @@ function getClient() {
  * esquema Zod (structured outputs). Si un clasificador de seguridad rechaza la
  * petición, `fallbacks: "default"` la reintenta en el modelo recomendado.
  */
-export async function generateStructured<T extends z.ZodType>({
+export async function generateWithClaude<T extends z.ZodType>({
   schema,
   system,
   content,
@@ -88,33 +88,4 @@ export async function generateStructured<T extends z.ZodType>({
       output_tokens: response.usage.output_tokens,
     },
   };
-}
-
-/** Atajo para analizar una imagen JPEG con una instrucción. */
-export function analyzeImage<T extends z.ZodType>(options: {
-  schema: T;
-  system: string;
-  instruction: string;
-  imageBase64: string;
-  effort: Effort;
-}): Promise<Generated<T>> {
-  return generateStructured({
-    schema: options.schema,
-    system: options.system,
-    effort: options.effort,
-    content: [
-      {
-        type: 'image',
-        source: { type: 'base64', media_type: 'image/jpeg', data: options.imageBase64 },
-      },
-      { type: 'text', text: options.instruction },
-    ],
-  });
-}
-
-/** Devuelve el color hex en mayúsculas si es válido, o `null`. */
-export function normalizeHex(hex: string | null | undefined): string | null {
-  if (!hex) return null;
-  const value = hex.trim().toUpperCase();
-  return /^#[0-9A-F]{6}$/.test(value) ? value : null;
 }

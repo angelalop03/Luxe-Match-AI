@@ -5,7 +5,7 @@
  *
  * POST { image_base64: string }  →  GarmentScan
  */
-import { analyzeImage, normalizeHex } from '../_shared/claude.ts';
+import { analyzeImage, normalizeHex } from '../_shared/ai.ts';
 import { z } from '../_shared/deps.ts';
 import { HttpError, json, serve } from '../_shared/http.ts';
 import { enforceRateLimit, getUserClient, recordUsage } from '../_shared/supabase.ts';

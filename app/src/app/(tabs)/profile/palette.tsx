@@ -29,8 +29,17 @@ export default function PaletteScreen() {
         <EmptyState
           icon="palette"
           title="Aún no tienes paleta"
-          description="Sube un selfie y la IA analizará tus colores en unos segundos."
-          action={<Button title="Subir selfie" onPress={() => router.replace('/profile/selfie')} />}
+          description="Sube un selfie para que la IA analice tus colores, o responde un test de 8 preguntas sin foto."
+          action={
+            <View style={styles.emptyActions}>
+              <Button title="Subir selfie" onPress={() => router.replace('/profile/selfie')} />
+              <Button
+                title="Hacer el test sin foto"
+                variant="secondary"
+                onPress={() => router.replace('/profile/color-quiz')}
+              />
+            </View>
+          }
         />
       </Screen>
     );
@@ -86,13 +95,19 @@ export default function PaletteScreen() {
       )}
 
       <AppText variant="caption" color="textSecondary">
-        Análisis orientativo generado con IA a partir de tu selfie. La luz de la foto puede
-        influir en el resultado.
+        {profile.analysis_method === 'quiz'
+          ? 'Resultado orientativo calculado con tus respuestas al test. Con un selfie, la IA puede afinarlo.'
+          : 'Análisis orientativo generado con IA a partir de tu selfie. La luz de la foto puede influir en el resultado.'}
       </AppText>
       <Button
-        title="Cambiar selfie y repetir análisis"
+        title={profile.analysis_method === 'quiz' ? 'Analizar con un selfie' : 'Cambiar selfie y repetir análisis'}
         variant="secondary"
         onPress={() => router.push('/profile/selfie')}
+      />
+      <Button
+        title="Repetir el test sin foto"
+        variant="ghost"
+        onPress={() => router.push('/profile/color-quiz')}
       />
     </Screen>
   );
@@ -123,6 +138,7 @@ function Section({
 }
 
 const styles = StyleSheet.create({
+  emptyActions: { gap: Spacing.sm },
   facts: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   fact: { flexGrow: 1, flexBasis: 140, padding: Spacing.md, gap: Spacing.xxs },
   capitalize: { textTransform: 'capitalize' },

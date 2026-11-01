@@ -41,17 +41,26 @@ Para reiniciar la base de datos con el esquema y los datos de prueba: `npx supab
 
 ### IA
 
-Las funciones de IA viven en `supabase/functions/` y llaman a Claude (`claude-opus-5-5`) con visión y respuestas estructuradas. La clave de Anthropic **solo** está en el servidor, nunca en la app.
+Las funciones de IA viven en `supabase/functions/` y funcionan con dos proveedores intercambiables (`_shared/ai.ts`). Las claves **solo** están en el servidor, nunca en la app.
+
+| Proveedor | Modelo | Coste | Notas |
+|---|---|---|---|
+| **Groq** | `qwen/qwen3.8-27b` (visión) | Plan gratuito con límites de uso | No conserva las peticiones por defecto; activa *Zero Data Retention* en Data Controls para los selfies |
+| **Anthropic** | `claude-opus-5-5` | De pago por uso | Más preciso; respuestas estructuradas garantizadas y reintento automático ante rechazos |
 
 ```bash
-# 1. Crea una clave en https://console.anthropic.com y guárdala en el archivo de secretos local
-cp supabase/functions/.env.example supabase/functions/.env   # y pega ANTHROPIC_API_KEY
+# 1. Crea una clave gratis en https://console.groq.com (o una de Anthropic) y pégala en el archivo de secretos
+cp supabase/functions/.env.example supabase/functions/.env   # GROQ_API_KEY=... o ANTHROPIC_API_KEY=...
 
 # 2. Sirve las funciones en local (con Supabase ya arrancado)
 npx supabase functions serve --env-file supabase/functions/.env
 ```
 
-Sin clave la app sigue funcionando: el escaneo avisa de que la IA no está configurada, y los outfits y el Restyle usan un generador por reglas de respaldo.
+Si hay las dos claves se usa Claude; `AI_PROVIDER=groq` fuerza Groq. Con Groq, la respuesta se valida con el mismo esquema Zod que con Claude y, si no lo cumple, se descarta.
+
+Medido en local con Groq: outfits en ~2 s y colorimetría en ~3–4 s. Límites del plan gratuito: unos **1.000 tokens de salida por minuto**, así que caben aproximadamente un análisis o una generación por minuto (si se supera, la app avisa de que la IA está ocupada). El modelo gratuito es menos preciso y consistente que Claude: repetir el análisis con el mismo selfie puede dar una estación vecina.
+
+Sin ninguna clave la app sigue funcionando: el escaneo avisa de que la IA no está configurada, los outfits y el Restyle usan un generador por reglas, y la colorimetría se puede hacer con el **test sin foto** (8 preguntas que calculan la estación de color en la propia app, `features/colorimetry/color-quiz.ts`). El test también es la opción para quien prefiere no subir un selfie.
 
 | Función | Qué hace | Límite por usuario |
 |---|---|---|
@@ -74,7 +83,7 @@ Las recomendaciones de compra (RF9) se calculan en la app (`features/shop/recomm
 | Auth | Supabase Auth | Sesión cifrada en el móvil (SecureStore + AES) |
 | Datos | Postgres con Row Level Security | Cada usuario solo accede a sus datos (RB7, RB8) |
 | Imágenes | Supabase Storage, buckets privados `selfies` y `garments` | Carpeta por usuario, JPEG de 1280 px |
-| IA | Claude (`claude-opus-5-5`) con visión y structured outputs, desde Supabase Edge Functions | La clave nunca va en la app; fallback automático ante rechazos |
+| IA | Groq (`qwen/qwen3.8-27b`, gratis) o Claude (`claude-opus-5-5`), desde Supabase Edge Functions | Proveedor intercambiable; la clave nunca va en la app |
 | Analytics | `analytics_events` + vistas de métricas | RF13 |
 
 ### Estructura de `app/src`
@@ -110,7 +119,7 @@ cd ..
 npx supabase test db   # Tests de base de datos (pgTAP), con Supabase arrancado
 ```
 
-- **Tests unitarios** (38): recomendaciones sin duplicados (RB6), paleta y presupuesto (RB2), filtros del armario (RF5), generador y validación de outfits (RB1, RB3, RB4, RB5, RB9), validación de formularios.
+- **Tests unitarios** (46): recomendaciones sin duplicados (RB6), paleta y presupuesto (RB2), filtros del armario (RF5), generador y validación de outfits (RB1, RB3, RB4, RB5, RB9), test de colorimetría sin foto (RF7), validación de formularios.
 - **Tests de base de datos** (18): aislamiento entre cuentas con RLS (RB7), fotos solo en la carpeta propia, composición de outfits (RB9), borrado de prendas (RB10), catálogo público y analytics.
 - **Integración continua**: `.github/workflows/ci.yml` ejecuta todo lo anterior en cada push y pull request.
 - **Accesibilidad** (RNF8): contraste AA en ambos temas, nombres accesibles en todos los controles, etiquetas en formularios y áreas táctiles de al menos 24 px. `app/scripts/a11y-audit.js` repite la auditoría pegándolo en la consola del navegador.
@@ -136,7 +145,7 @@ Vistas de métricas (solo para el equipo, desde Supabase Studio o con `service_r
 ```bash
 npx supabase link --project-ref <tu-proyecto>
 npx supabase db push
-npx supabase secrets set ANTHROPIC_API_KEY=...
+npx supabase secrets set GROQ_API_KEY=...        # o ANTHROPIC_API_KEY=...
 npx supabase functions deploy
 ```
 

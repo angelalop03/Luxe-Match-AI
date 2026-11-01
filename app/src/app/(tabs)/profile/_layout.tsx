@@ -8,6 +8,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="preferences" />
       <Stack.Screen name="selfie" />
       <Stack.Screen name="palette" />
+      <Stack.Screen name="color-quiz" />
     </Stack>
   );
 }

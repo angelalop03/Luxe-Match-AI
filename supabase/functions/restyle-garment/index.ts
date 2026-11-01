@@ -6,7 +6,7 @@
  *
  * POST { garment_id }  →  { source, restyle }
  */
-import { analyzeImage, generateStructured } from '../_shared/claude.ts';
+import { analyzeImage, generateStructured } from '../_shared/ai.ts';
 import { z } from '../_shared/deps.ts';
 import { HttpError, json, serve } from '../_shared/http.ts';
 import { enforceRateLimit, getUserClient, recordUsage } from '../_shared/supabase.ts';

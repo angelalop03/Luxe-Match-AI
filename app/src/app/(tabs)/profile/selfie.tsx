@@ -104,6 +104,18 @@ export default function SelfieScreen() {
         color para crear tu paleta personal.
       </AppText>
 
+      <Card>
+        <AppText variant="bodyMedium">¿Prefieres no subir una foto?</AppText>
+        <AppText variant="caption" color="textSecondary">
+          Responde 8 preguntas sobre tu piel, tu pelo y tus ojos y calculamos tu estación de color.
+        </AppText>
+        <Button
+          title="Hacer el test sin foto"
+          variant="secondary"
+          onPress={() => router.push('/profile/color-quiz')}
+        />
+      </Card>
+
       {profile === undefined ? (
         <ActivityIndicator color={theme.accent} />
       ) : (

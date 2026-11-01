@@ -9,7 +9,7 @@
  *
  * POST { occasion, season, notes?, count? }  →  { source, outfits: OutfitProposal[] }
  */
-import { generateStructured } from '../_shared/claude.ts';
+import { generateStructured } from '../_shared/ai.ts';
 import { z } from '../_shared/deps.ts';
 import { HttpError, json, serve } from '../_shared/http.ts';
 import {

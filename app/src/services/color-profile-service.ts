@@ -1,5 +1,6 @@
 import { removeImage, uploadImage, type PreparedImage } from '@/lib/images';
 import { supabase } from '@/lib/supabase';
+import type { ColorQuizResult } from '@/features/colorimetry/color-quiz';
 import type { ColorProfile } from '@/types/color-profile';
 
 const Bucket = 'selfies';
@@ -14,9 +15,24 @@ export async function fetchColorProfile(userId: string): Promise<ColorProfile | 
   return data as ColorProfile | null;
 }
 
+const EmptyAnalysis = {
+  season: null,
+  undertone: null,
+  contrast: null,
+  palette: [],
+  recommended_colors: [],
+  avoid_colors: [],
+  summary: null,
+  tips: [],
+  best_metals: [],
+  analysis_method: null,
+  analyzed_at: null,
+};
+
 /**
  * Guarda un selfie nuevo para el análisis de colorimetría y borra el anterior.
- * El resultado del análisis anterior deja de ser válido, así que se limpia.
+ * Si la paleta venía del selfie anterior deja de ser válida y se limpia; si
+ * venía del test de preguntas, se conserva hasta que se analice el nuevo.
  */
 export async function saveSelfie(
   userId: string,
@@ -24,23 +40,11 @@ export async function saveSelfie(
   previous: ColorProfile | null,
 ): Promise<ColorProfile> {
   const path = await uploadImage(Bucket, userId, image);
+  const keepAnalysis = previous?.analysis_method === 'quiz';
 
   const { data, error } = await supabase
     .from('color_profiles')
-    .upsert({
-      user_id: userId,
-      selfie_path: path,
-      season: null,
-      undertone: null,
-      contrast: null,
-      palette: [],
-      recommended_colors: [],
-      avoid_colors: [],
-      summary: null,
-      tips: [],
-      best_metals: [],
-      analyzed_at: null,
-    })
+    .upsert({ user_id: userId, selfie_path: path, ...(keepAnalysis ? {} : EmptyAnalysis) })
     .select('*')
     .single();
 
@@ -49,6 +53,28 @@ export async function saveSelfie(
     throw error;
   }
   await removeImage(Bucket, previous?.selfie_path ?? null);
+  return data as ColorProfile;
+}
+
+/**
+ * Guarda el resultado del test de colorimetría sin selfie. No toca el
+ * selfie si lo hubiera.
+ */
+export async function saveQuizProfile(
+  userId: string,
+  result: ColorQuizResult,
+): Promise<ColorProfile> {
+  const { data, error } = await supabase
+    .from('color_profiles')
+    .upsert({
+      user_id: userId,
+      ...result,
+      analysis_method: 'quiz',
+      analyzed_at: new Date().toISOString(),
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
   return data as ColorProfile;
 }
 

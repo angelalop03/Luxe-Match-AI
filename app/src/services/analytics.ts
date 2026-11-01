@@ -6,6 +6,7 @@ export type AnalyticsEvent =
   | 'sign_up'
   | 'sign_in'
   | 'onboarding_completed'
+  | 'color_quiz_completed'
   | 'style_preferences_updated'
   | 'garment_uploaded'
   | 'garment_scan_applied'

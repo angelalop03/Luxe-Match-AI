@@ -5,7 +5,7 @@
  *
  * POST {}  →  ColorProfile actualizado
  */
-import { analyzeImage, normalizeHex } from '../_shared/claude.ts';
+import { analyzeImage, normalizeHex } from '../_shared/ai.ts';
 import { z } from '../_shared/deps.ts';
 import { HttpError, json, serve } from '../_shared/http.ts';
 import { enforceRateLimit, getUserClient, recordUsage } from '../_shared/supabase.ts';
@@ -42,15 +42,27 @@ const ColorAnalysisSchema = z.object({
 const System = `Eres un asesor de imagen experto en colorimetría estacional (sistema de 12 estaciones).
 Analiza únicamente el color: subtono y luminosidad de la piel, color de ojos y de pelo, y el
 contraste entre ellos. Ten en cuenta que la luz y la cámara alteran los tonos; compénsalo.
+La paleta, los colores estrella y los colores a evitar deben ser coherentes con la estación
+elegida (por ejemplo, los Otoños evitan el negro puro y el blanco óptico; los Inviernos sí los
+llevan) y ningún color puede aparecer a la vez como recomendado y como color a evitar.
 No describas ni infieras edad, etnia, rasgos físicos u otros datos personales: habla solo de
 colores. Escribe en español de España, con un tono cálido y profesional.`;
 
 const Instruction = 'Haz mi análisis de colorimetría a partir de este selfie.';
 
-function cleanSwatches(swatches: { hex: string; name: string }[]) {
+/** Hex válidos, nombres en minúscula salvo la inicial y sin colores repetidos. */
+function cleanSwatches(swatches: { hex: string; name: string }[], exclude: Set<string> = new Set()) {
+  const seen = new Set<string>();
   return swatches
-    .map((s) => ({ hex: normalizeHex(s.hex), name: s.name.trim() }))
-    .filter((s): s is { hex: string; name: string } => !!s.hex && !!s.name);
+    .map((s) => {
+      const name = s.name.trim().toLowerCase();
+      return { hex: normalizeHex(s.hex), name: name.charAt(0).toUpperCase() + name.slice(1) };
+    })
+    .filter((s): s is { hex: string; name: string } => {
+      if (!s.hex || !s.name || seen.has(s.hex) || exclude.has(s.hex)) return false;
+      seen.add(s.hex);
+      return true;
+    });
 }
 
 serve(async (req) => {
@@ -96,6 +108,11 @@ serve(async (req) => {
     );
   }
 
+  // Un color no puede estar a la vez en la paleta y entre los que evitar:
+  // si el modelo se contradice, gana "evitar" (lo prudente para la persona).
+  const avoid = cleanSwatches(result.avoid_colors);
+  const avoidHex = new Set(avoid.map((s) => s.hex));
+
   const { data: updated, error: updateError } = await client
     .from('color_profiles')
     .update({
@@ -103,11 +120,12 @@ serve(async (req) => {
       undertone: result.undertone,
       contrast: result.contrast,
       summary: result.summary,
-      palette: cleanSwatches(result.palette),
-      recommended_colors: cleanSwatches(result.recommended_colors),
-      avoid_colors: cleanSwatches(result.avoid_colors),
+      palette: cleanSwatches(result.palette, avoidHex),
+      recommended_colors: cleanSwatches(result.recommended_colors, avoidHex),
+      avoid_colors: avoid,
       best_metals: [...new Set(result.best_metals)],
       tips: result.tips,
+      analysis_method: 'ai',
       analyzed_at: new Date().toISOString(),
     })
     .eq('user_id', user.id)

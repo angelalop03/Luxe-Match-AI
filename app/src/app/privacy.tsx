@@ -19,11 +19,11 @@ const Sections: { title: string; body: string }[] = [
   },
   {
     title: 'Fotos y selfie',
-    body: 'Se guardan en un almacenamiento privado al que solo accede tu cuenta. El selfie se usa únicamente para el análisis de color: no se usa para reconocerte ni se comparte. Puedes borrarlo cuando quieras desde tu perfil.',
+    body: 'Se guardan en un almacenamiento privado al que solo accede tu cuenta. El selfie se usa únicamente para el análisis de color: no se usa para reconocerte ni se comparte. Puedes borrarlo cuando quieras desde tu perfil. Si prefieres no subir ninguna foto, puedes obtener tu paleta con el test de preguntas.',
   },
   {
     title: 'Inteligencia artificial',
-    body: 'Para los análisis enviamos la foto o los datos necesarios a nuestro proveedor de IA (Anthropic), que los procesa para devolver el resultado y no los usa para entrenar sus modelos.',
+    body: 'Para los análisis enviamos la foto o los datos necesarios a nuestro proveedor de IA (Groq o Anthropic, según la configuración del servicio), que los procesa solo para devolver el resultado. Según sus condiciones, ninguno de los dos conserva estas peticiones más allá de lo necesario para el servicio ni las usa para entrenar sus modelos por defecto.',
   },
   {
     title: 'Enlaces a tiendas',

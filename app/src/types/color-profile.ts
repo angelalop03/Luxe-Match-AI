@@ -13,6 +13,8 @@ export type ColorProfile = {
   tips: string[];
   best_metals: string[];
   selfie_path: string | null;
+  /** `ai`: análisis del selfie; `quiz`: test de preguntas sin foto. */
+  analysis_method: 'ai' | 'quiz' | null;
   analyzed_at: string | null;
   created_at: string;
   updated_at: string;
