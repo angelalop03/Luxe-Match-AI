@@ -18,7 +18,8 @@ export type ErrorCode =
   | 'ai_busy'
   | 'ai_refused'
   | 'ai_failed'
-  | 'invalid_image';
+  | 'invalid_image'
+  | 'not_enough_garments';
 
 const StatusByCode: Record<ErrorCode, number> = {
   unauthorized: 401,
@@ -30,6 +31,7 @@ const StatusByCode: Record<ErrorCode, number> = {
   ai_refused: 422,
   ai_failed: 502,
   invalid_image: 422,
+  not_enough_garments: 422,
 };
 
 export class HttpError extends Error {

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Icon, type IconName } from './icon';
@@ -51,17 +51,29 @@ type IconButtonProps = {
   label: string;
   onPress: () => void;
   variant?: 'filled' | 'plain';
+  /** Color del icono en la variante `plain` (p. ej. corazón de favorito). */
+  color?: ThemeColor;
+  /** Estado de interruptor, para lectores de pantalla. */
+  selected?: boolean;
 };
 
-export function IconButton({ icon, label, onPress, variant = 'plain' }: IconButtonProps) {
+export function IconButton({
+  icon,
+  label,
+  onPress,
+  variant = 'plain',
+  color = 'text',
+  selected,
+}: IconButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={selected === undefined ? undefined : { selected }}
       onPress={onPress}
       hitSlop={8}
       style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
-      {variant === 'filled' ? <FilledIcon icon={icon} /> : <Icon name={icon} />}
+      {variant === 'filled' ? <FilledIcon icon={icon} /> : <Icon name={icon} color={color} />}
     </Pressable>
   );
 }

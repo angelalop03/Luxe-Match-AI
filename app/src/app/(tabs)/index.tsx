@@ -5,6 +5,7 @@ import { AppText, Button, Card, Icon, Screen, type IconName } from '@/components
 import { MaxWideContentWidth, Spacing } from '@/constants/theme';
 import { useColorProfile } from '@/features/colorimetry/use-color-profile';
 import { optionLabel } from '@/features/onboarding/questions';
+import { useOutfits } from '@/features/outfits/use-outfits';
 import { GarmentCard } from '@/features/wardrobe/garment-card';
 import { useGarments } from '@/features/wardrobe/use-garments';
 import { useSignedUrls } from '@/hooks/use-signed-urls';
@@ -27,6 +28,9 @@ export default function DashboardScreen() {
   const theme = useTheme();
   const { garments } = useGarments();
   const { profile: colorProfile } = useColorProfile();
+  const { outfits } = useOutfits();
+  const outfitCount = outfits?.length ?? 0;
+  const favoriteCount = outfits?.filter((o) => o.is_favorite).length ?? 0;
   const recent = (garments ?? []).slice(0, 6);
   const imageUrls = useSignedUrls('garments', recent.map((g) => g.image_path));
 
@@ -47,7 +51,10 @@ export default function DashboardScreen() {
     },
     {
       title: 'Outfits guardados',
-      description: 'Tus looks favoritos para cada ocasión.',
+      description:
+        outfitCount === 0
+          ? 'Tus looks favoritos para cada ocasión.'
+          : `${outfitCount} ${outfitCount === 1 ? 'outfit' : 'outfits'}${favoriteCount ? `, ${favoriteCount} ${favoriteCount === 1 ? 'favorito' : 'favoritos'}` : ''}.`,
       icon: 'heart',
       href: '/outfits',
     },
@@ -91,14 +98,24 @@ export default function DashboardScreen() {
         <AppText style={{ color: theme.onPrimary }}>
           {remaining > 0
             ? `Añade ${remaining} ${remaining === 1 ? 'prenda más' : 'prendas más'} y podremos proponerte tus primeros looks.`
-            : 'Muy pronto podrás generar outfits con tus propias prendas.'}
+            : 'Crea looks para cualquier ocasión con las prendas que ya tienes.'}
         </AppText>
         <View style={styles.heroAction}>
-          <HeroButton
-            label="Añadir prenda"
-            onPress={() => router.push('/wardrobe/new')}
-            color={theme.onPrimary}
-          />
+          {remaining > 0 ? (
+            <HeroButton
+              label="Añadir prenda"
+              icon="plus"
+              onPress={() => router.push('/wardrobe/new')}
+              color={theme.onPrimary}
+            />
+          ) : (
+            <HeroButton
+              label="Crear looks"
+              icon="sparkles"
+              onPress={() => router.push('/outfits/generate')}
+              color={theme.onPrimary}
+            />
+          )}
         </View>
       </Card>
 
@@ -148,14 +165,24 @@ export default function DashboardScreen() {
 }
 
 /** Botón con borde claro para usar sobre la tarjeta oscura. */
-function HeroButton({ label, onPress, color }: { label: string; onPress: () => void; color: string }) {
+function HeroButton({
+  label,
+  icon,
+  onPress,
+  color,
+}: {
+  label: string;
+  icon: IconName;
+  onPress: () => void;
+  color: string;
+}) {
   return (
     <Card
       onPress={onPress}
       accessibilityLabel={label}
       style={[styles.heroButton, { borderColor: color, backgroundColor: 'transparent' }]}>
       <View style={styles.heroButtonContent}>
-        <Icon name="plus" size={18} tintColor={color} />
+        <Icon name={icon} size={18} tintColor={color} />
         <AppText variant="label" style={[styles.heroButtonLabel, { color }]}>
           {label}
         </AppText>

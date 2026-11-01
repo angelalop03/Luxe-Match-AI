@@ -56,6 +56,9 @@ Sin clave, la app sigue funcionando: avisa de que la IA no está configurada y p
 |---|---|---|
 | `scan-garment` | Detecta tipo, color, estilo, ocasión y temporada de una prenda (RF6) | 30 / hora |
 | `analyze-colors` | Estación de color, paleta, colores recomendados y a evitar a partir del selfie (RF7) | 5 / hora |
+| `generate-outfits` | Outfits por ocasión y temporada solo con prendas del armario, con explicación estilística (RF8) | 20 / hora |
+
+`generate-outfits` filtra primero por reglas (temporada, prendas existentes), pide a Claude las combinaciones y valida cada propuesta (parte de arriba + de abajo, o vestido). Si la IA no está disponible, usa un generador por reglas que puntúa las prendas por ocasión, estilo y paleta, así la app sigue funcionando sin clave.
 
 Cada llamada queda registrada en `analytics_events` (`ai_garment_scan`, `ai_color_analysis`) con los tokens usados y el tiempo de respuesta, para controlar coste y rendimiento. Como referencia, cada análisis ronda los 2–4 mil tokens de entrada y unos cientos de salida.
 
@@ -96,7 +99,7 @@ Las rutas protegidas del layout raíz deciden qué ve el usuario: sin sesión �
 - [x] **Fase 1** · Registro, login, logout y recuperación de contraseña (RF1) · perfil editable (RF2) · quiz de onboarding (RF3) · esquema completo con RLS
 - [x] **Fase 2** · Subida de imágenes con vista previa y compresión (RF4) · armario digital: añadir, editar, eliminar, categorizar y filtrar prendas (RF5) · selfie para colorimetría · dashboard con datos reales
 - [x] **Fase 3** · Escaneo IA de prendas que rellena el formulario (RF6) · análisis de colorimetría con paleta, colores estrella y a evitar (RF7)
-- [ ] **Fase 4** · Generación y guardado de outfits (RF8, RF10, RB1–RB11)
+- [x] **Fase 4** · Generación de outfits por ocasión y temporada (RF8) · guardar, editar, marcar favoritos y eliminar (RF10) · validación de composición en la base de datos (RB9)
 - [ ] **Fase 5** · Ecommerce, Restyle y dashboard completo (RF9, RF11, RF14)
 - [ ] **Fase 6** · Analytics, accesibilidad, tests y publicación
 

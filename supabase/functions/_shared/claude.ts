@@ -1,17 +1,21 @@
 import { Anthropic, betaZodOutputFormat, type z } from './deps.ts';
 import { HttpError } from './http.ts';
 
-/** Modelo de visión usado para todos los análisis. */
+/** Modelo usado para todos los análisis y generaciones. */
 export const ClaudeModel = 'claude-opus-5-5';
 
-type AnalyzeImageOptions<T extends z.ZodType> = {
+type Effort = 'low' | 'medium' | 'high';
+type ContentBlock = Anthropic.Beta.BetaContentBlockParam;
+
+type GenerateOptions<T extends z.ZodType> = {
   schema: T;
   system: string;
-  instruction: string;
-  imageBase64: string;
+  content: ContentBlock[];
   /** `low` para clasificar rápido; `medium` cuando hace falta más criterio. */
-  effort: 'low' | 'medium' | 'high';
+  effort: Effort;
 };
+
+type Generated<T extends z.ZodType> = { result: z.infer<T>; usage: Record<string, unknown> };
 
 let client: InstanceType<typeof Anthropic> | null = null;
 
@@ -23,17 +27,16 @@ function getClient() {
 }
 
 /**
- * Envía una imagen a Claude y devuelve la respuesta ya validada con el
+ * Pide a Claude una respuesta estructurada y la devuelve ya validada con el
  * esquema Zod (structured outputs). Si un clasificador de seguridad rechaza la
  * petición, `fallbacks: "default"` la reintenta en el modelo recomendado.
  */
-export async function analyzeImage<T extends z.ZodType>({
+export async function generateStructured<T extends z.ZodType>({
   schema,
   system,
-  instruction,
-  imageBase64,
+  content,
   effort,
-}: AnalyzeImageOptions<T>): Promise<{ result: z.infer<T>; usage: Record<string, unknown> }> {
+}: GenerateOptions<T>): Promise<Generated<T>> {
   const anthropic = getClient();
 
   let response;
@@ -45,15 +48,7 @@ export async function analyzeImage<T extends z.ZodType>({
       fallbacks: 'default',
       output_config: { effort, format: betaZodOutputFormat(schema) },
       system,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
-            { type: 'text', text: instruction },
-          ],
-        },
-      ],
+      messages: [{ role: 'user', content }],
     });
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError || error instanceof Anthropic.InternalServerError) {
@@ -64,7 +59,7 @@ export async function analyzeImage<T extends z.ZodType>({
     }
     if (error instanceof Anthropic.BadRequestError) {
       console.error('[claude] bad request:', error.message);
-      throw new HttpError('invalid_image', 'No se ha podido procesar la imagen.');
+      throw new HttpError('invalid_image', 'No se ha podido procesar la petición.');
     }
     if (error instanceof Anthropic.APIConnectionError) {
       throw new HttpError('ai_busy', 'No hay conexión con el servicio de IA.');
@@ -79,7 +74,7 @@ export async function analyzeImage<T extends z.ZodType>({
 
   if (response.stop_reason === 'refusal') {
     console.warn('[claude] refusal:', response.stop_details?.category);
-    throw new HttpError('ai_refused', 'La IA no ha podido analizar esta imagen.');
+    throw new HttpError('ai_refused', 'La IA no ha podido completar la petición.');
   }
   if (response.stop_reason === 'max_tokens' || !response.parsed_output) {
     throw new HttpError('ai_failed', 'La respuesta de la IA ha llegado incompleta.');
@@ -93,6 +88,28 @@ export async function analyzeImage<T extends z.ZodType>({
       output_tokens: response.usage.output_tokens,
     },
   };
+}
+
+/** Atajo para analizar una imagen JPEG con una instrucción. */
+export function analyzeImage<T extends z.ZodType>(options: {
+  schema: T;
+  system: string;
+  instruction: string;
+  imageBase64: string;
+  effort: Effort;
+}): Promise<Generated<T>> {
+  return generateStructured({
+    schema: options.schema,
+    system: options.system,
+    effort: options.effort,
+    content: [
+      {
+        type: 'image',
+        source: { type: 'base64', media_type: 'image/jpeg', data: options.imageBase64 },
+      },
+      { type: 'text', text: options.instruction },
+    ],
+  });
 }
 
 /** Devuelve el color hex en mayúsculas si es válido, o `null`. */

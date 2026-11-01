@@ -4,6 +4,7 @@ import type { PreparedImage } from '@/lib/images';
 import { supabase } from '@/lib/supabase';
 import type { ColorProfile } from '@/types/color-profile';
 import type { GarmentCategory, Season } from '@/types/garment';
+import type { OutfitProposal, OutfitRequest, OutfitSource } from '@/types/outfit';
 
 /** Respuesta de la Edge Function `scan-garment` (RF6). */
 export type GarmentScan = {
@@ -46,9 +47,9 @@ async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T
   if (error instanceof FunctionsHttpError) {
     const payload = await error.context.json().catch(() => null);
     const code: string = payload?.error ?? 'ai_failed';
-    // Para imágenes no válidas el servidor da un motivo concreto.
+    // En estos casos el servidor da un motivo concreto para mostrar.
     const message =
-      code === 'invalid_image' && payload?.message
+      (code === 'invalid_image' || code === 'not_enough_garments') && payload?.message
         ? payload.message
         : (MessagesByCode[code] ?? 'No hemos podido completar el análisis.');
     throw new AiError(code, message);
@@ -63,4 +64,12 @@ export function scanGarment(image: PreparedImage) {
 /** Analiza el selfie guardado y devuelve el perfil de color actualizado (RF7). */
 export function analyzeColors() {
   return invoke<ColorProfile>('analyze-colors', {});
+}
+
+/**
+ * Genera propuestas de outfit con prendas del armario (RF8). `source` indica
+ * si las ha creado la IA o el generador por reglas de respaldo.
+ */
+export function generateOutfits(request: OutfitRequest) {
+  return invoke<{ source: OutfitSource; outfits: OutfitProposal[] }>('generate-outfits', request);
 }
